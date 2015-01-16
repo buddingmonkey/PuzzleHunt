@@ -1,0 +1,7 @@
+{% extends "layout.html" %}
+{% block body %}
+    {% if session.logged_in %}
+        <a href="http://www.apronus.com/chess/wbeditor.php">Chess Solver</a></br>
+        <a href="http://www.sudoku-solutions.com/">Sudoku Solver </a>
+    {% endif %}
+{% endblock %}

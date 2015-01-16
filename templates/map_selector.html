@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block body %}
+    {% if session.logged_in %}
+        <script>
+            var mapName;
+            function createMap(){
+
+            }
+        </script>
+        {% for entry in entries %}
+            <li><h2><a href={{ url_for('mapping', mapid=entry[0]) }}>{{ entry[1] }}</a></h2>
+        {% else %}
+            <li><em>No maps yet</em>
+        {% endfor %}
+        <form action="{{ url_for('add_entry') }}" method=post class=add-entry>
+          <dl>
+            <dt>Title:
+            <dd><input type=text size=30 name=title>
+            <dd><input type=submit value=Create>
+          </dl>
+        </form>
+    {% endif %}
+{% endblock %}

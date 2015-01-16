@@ -1,0 +1,118 @@
+{% extends "layout.html" %}
+{% block body %}
+    {% if session.logged_in %}
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+        <script>
+            var map;
+            var markers = [];
+            var mapid = 0;
+            var markerTitle = "";
+
+            function initialize() {
+              mapid = document.URL.split("/").pop();
+              var myLatlng = new google.maps.LatLng(39.8282, -98.5795);
+              var mapOptions = {
+                zoom: 4,
+                center: myLatlng
+              }
+
+              map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
+              google.maps.event.addListener(map, 'click', function(event) {
+                  mapZoom = map.getZoom();
+                  startLocation = event.latLng;
+                  markerTitle = document.getElementById('markerDetails').value;
+                  setTimeout(function(){
+                      var marker = placeMarker(markerTitle);
+                      if (typeof marker !== undefined ){
+                          addMarkerToDB(marker);
+                      }
+                  }, 600);
+              });
+
+              loadMarkers();
+
+              window.setInterval(function(){
+                  loadMarkers();
+              }, 5000);
+            }
+
+            google.maps.event.addDomListener(window, 'load', initialize);
+
+            function addMarkerToDB(marker){
+                if(mapZoom != map.getZoom()){
+                    return;
+                }
+                $.post("{{ url_for('add_marker') }}", {mapid: mapid, title: markerTitle, lat: startLocation.lat(), long: startLocation.lng()},
+                function(response){
+                    marker.dbid = response['itemid'];
+                });
+            }
+
+            function placeMarker(m) {
+                if(mapZoom == map.getZoom()) {
+                    markerTitle = m;
+                    var contentString = '<div id="content">' +
+                            markerTitle +
+                            '</br></br>' +
+                            '<input onclick="clearMarker(' + markers.length + ');" type=button value="Delete Marker">'
+                    '</div>';
+
+                    var infowindow = new google.maps.InfoWindow({
+                        content: contentString
+                    });
+
+                    var marker = new google.maps.Marker({
+                        position: startLocation,
+                        map: map
+                    });
+
+                    markers.push(marker);
+
+                    google.maps.event.addListener(marker, 'click', function () {
+                        infowindow.open(map, marker);
+                    });
+                }
+                return marker;
+            }
+
+            function clearMarker(m) {
+                var marker = markers[m];
+                marker.setMap(null);
+                $.post("{{ url_for('delete_marker') }}", {markerid: marker.dbid});
+            }
+
+            function loadMarkers(){
+                $.post("{{ url_for('get_markers') }}", {mapid: mapid}, function(response){
+                    var itemArray = response['items'];
+                    for (var i = 0; i < itemArray.length; i++){
+                        mapZoom = map.getZoom()
+                        startLocation = new google.maps.LatLng(itemArray[i].latitude, itemArray[i].longitude);
+
+                        // Check if already exists
+                        if (checkForMarker(itemArray[i])){
+                            continue;
+                        }
+
+                        var marker = placeMarker(itemArray[i].title);
+                        marker.dbid = itemArray[i].id;
+                    }
+                });
+            }
+
+            function checkForMarker(item){
+                for (m in markers){
+                    if (m.dbid == item.id){
+                        return true;
+                    }
+                }
+                return false;
+            }
+        </script>
+        <div id="map-canvas"></div>
+        </br>
+        <form id="map-details">
+            Info in pin: <input type="text" id="markerDetails" name="details">
+        </form>
+    {% endif %}
+{% endblock %}
