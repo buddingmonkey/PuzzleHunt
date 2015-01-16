@@ -1,1 +1,1 @@
-from PuzzleHunt import app as application
+from PuzzleHunt import application
