@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
 {% block body %}
-  Body stuff goes here
+  <h2><a href={{ url_for('map_select', mapid=entry[0]) }}>Mapping tool</a></h2>
+  <h2><a href={{ url_for('solvers', mapid=entry[0]) }}>Solvers</a></h2></h2>
 {% endblock %}

@@ -1,0 +1,1 @@
+from PuzzleHunt import app as application
